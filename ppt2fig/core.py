@@ -382,14 +382,19 @@ def detect_backends(explicit_path=None, *, lang=DEFAULT_LANGUAGE):
 
         supported = backend_name in {"libreoffice", "custom"}
         detail = ""
+        is_explicit_candidate = bool(explicit_path) and os.path.abspath(resolved) == os.path.abspath(explicit_path)
         if backend_name == "wps":
             supported = False
             detail = translator("core.detail.wps_candidate_detected")
         elif backend_name == "custom":
             detail = translator("core.detail.explicit_office_bin")
         elif backend_name == "powerpoint":
-            detail = translator("core.detail.powerpoint_candidate_detected")
-        elif explicit_path and os.path.abspath(resolved) == os.path.abspath(explicit_path):
+            supported, capability_detail = _can_use_powerpoint_com(lang=lang)
+            if is_explicit_candidate and supported:
+                detail = translator("core.detail.explicit_office_bin")
+            else:
+                detail = capability_detail or translator("core.detail.powerpoint_candidate_detected")
+        elif is_explicit_candidate:
             detail = translator("core.detail.explicit_office_bin")
 
         backends.append(
